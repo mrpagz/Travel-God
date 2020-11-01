@@ -17,10 +17,10 @@ Demo
 Alt text
 
 Code Example
-https://github.com/jsgarzi/Travel_God
+https://mrpagz.github.io/Travel-God/
 
 Authors and Acknowledgement
 Naysalee Acosta, Francis Roy Balasabas, Isha Khosla, Carl Logerie, Julian Sgarzi, and Anita Dan
 
 Link to the App
-https://jsgarzi.github.io/Travel_God/index.html
+https://github.com/mrpagz/Travel-God
