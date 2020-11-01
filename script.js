@@ -2,7 +2,6 @@
 let map;
 
 var currentLocation;
-var options = 
 
 
 function initMap() {
@@ -25,6 +24,7 @@ function initMap() {
         console.log(places) //where the name is captured 
         currentLocation = places[0].name; //storing the name
         console.log(currentLocation);
+        city.push(currentLocation);
         if (places.length == 0) {
             return;
         }
@@ -63,113 +63,272 @@ function initMap() {
                 bounds.extend(place.geometry.location);
             }
         });
-        map.setOptions({minZoom : 12, maxZoom : 16 }) //fixed zoom to make more sense on search of city
+        map.setOptions({ minZoom: 12, maxZoom: 16 }) //fixed zoom to make more sense on search of city
         map.fitBounds(bounds);
     });
 }
-/////////////////
+// /////////////////
+
+
+// Weather API
+
+$(document).ready(function () {
+
+    var APIkey = "11aae01829609ac12c0335ac0cc4505c";
+
+    $("#travel-input").keypress(function (e) {
+        if (e.which == 13) {
+
+
+            var city = [];
+            console.log(city);
+            $("#current").empty();
+
+
+
+            $(this).attr("city");
+
+            var getEvents = [];
+
+
+            $.ajax({
+                type: "GET",
+                url: "https://app.ticketmaster.com/discovery/v2/events.json?size=4&apikey=ElWPP9FatyxVq4ke0f4mPT8u3LtGG04m&city=" + city,
+                async: true,
+                dataType: "json",
+                success: function (json) {
+                    getEvents.json = json;
+                    showEvents(json);
+                    console.log(json);
+                },
+                error: function (xhr, status, err) {
+                    console.log(err);
+                }
+            });
+
+            function showEvents(json) {
+                var events = json._embedded.events;
+                for (var i = 0; i < events.length; i++) {
+                    var newDiv = $("<div>");
+                    var pName = $("<p>").text(json._embedded.events[i].name);
+                    var pDate = $("<p>").text(json._embedded.events[i].dates.start.localDate);
+                    var pLink = $("<p>").text(json._embedded.events[i].url);
+                    newDiv.append(pName, pDate, pLink);
+
+                    $("#card-content-event" + [i]).append(newDiv);
+                }
+            };
+
+
+
+            var userInput = $("#travel-input").val();
+
+            var queryURL = "https://api.openweathermap.org/data/2.5/weather?q=" + userInput + "&appid=" + APIkey + "&units=imperial"
+
+
+            $.ajax({
+                url: queryURL,
+                method: "GET"
+            }).then(function (response) {
+                console.log(response);
+
+                var weathResults = response;
+                console.log(weathResults);
+
+                var city = response.name;
+                var lat = response.coord.lat;
+                var lon = response.coord.lon;
+                var temp = response.main.temp;
+                var weather = response.weather[0].icon;
+
+                console.log(lat, lon);
+
+                var curDiv = $("<div>");
+                var pCity = $("<p>").text(city);
+                var pTemp = $("<p>").text("Temperature: " + temp + "F");
+                var weathIcon = $("<img>").attr("src", "http://openweathermap.org/img/w/" + weather + ".png");
+                curDiv.append(pCity, pTemp, weathIcon)
+
+                $("#current").append(curDiv)
+
+                sevenDay(lat, lon)
+
+            })
+        }
+    });
+    function sevenDay(lat, lon) {
+
+        var userInput = $("#travel-input").val();
+
+        var sevDURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&exclude={current}" + "&appid=" + APIkey + "&units=imperial"
+
+        console.log(lat, lon)
+
+
+        $.ajax({
+            url: sevDURL,
+            method: "GET"
+        }).then(function (response) {
+            console.log(response);
+            console.log(response.daily)
+
+
+            var daily = response.daily
+
+            $(".card-content").empty();
+
+            for (var i = 0; i < daily.length; i++) {
+
+                var dayoneDiv = $("<div>")
+
+
+                var pTemp = $("<p>").text("Temperature " + response.daily[i].temp.day + "F");
+                console.log(pTemp)
+                var pWeath = $("<img>").attr("src", "http://openweathermap.org/img/w/" + daily[i].weather[0].icon + ".png")
+                console.log(pWeath)
+                dayoneDiv.append(pTemp, pWeath)
+                $("#card" + [i]).append(dayoneDiv)
+
+                console.log(daily[i].temp.day)
+
+
+            }
+
+
+
+        })
+
+
+    };
+
+    // TicketMaster API /////////////////
+
+    var city = [];
+    console.log(city);
+
+    $("#travel-input").keypress(function (e) {
+        if (e.which === 13) {
+
+            var searchedCity = $("#travel-input").val();
+            $(this).attr("city.name");
 
 
 
 
-// //////////////// EVENT Test
-// var getEvents = [];
-// $.ajax({
-//   type: "GET",
-//   url: "https://app.ticketmaster.com/discovery/v2/events.json?size=4&apikey=ElWPP9FatyxVq4ke0f4mPT8u3LtGG04m",
-//   async: true,
-//   dataType: "json",
-//   success: function(json) {
-//       getEvents.json = json;
-//       showEvents(json);
-//       console.log(json);
-//       }
-// });
-// function showEvents(json) {
-//   var items = $('#events .list-group-item'); //// might want to try grabbing just the class and use the class at each index instead of using an id 
-//   var events = json._embedded.events;
-//   var item = items.first(); ////may not need
-//   for (var i=0; i< events.length; i++) {
-//     item.children('.list-group-item-heading').text(events[i].name);
-//     item.children('.list-group-item-text').text(events[i].dates.start.localDate);
-//     item.children('.list-group-url').text(events[i].url);
-//     try {
-//       item.children('.venue').text(events[i]._embedded.venues[0].name + " in " + events[i]._embedded.venues[0].city.name + " url " + events[i]._embedded.venues[0].url);
-//     } catch (err) {
-//       console.log(err);
+            var getEvents = [];
+
+
+            $.ajax({
+                type: "GET",
+                url: "https://app.ticketmaster.com/discovery/v2/events.json?size=4&apikey=ElWPP9FatyxVq4ke0f4mPT8u3LtGG04m&city=" + searchedCity,
+                async: true,
+                dataType: "json",
+                success: function (json) {
+                    getEvents.json = json;
+                    showEvents(json);
+                    console.log(json);
+                },
+                error: function (xhr, status, err) {
+                    console.log(err);
+                }
+            });
+
+            function showEvents(json) {
+                console.log(json);
+                var events = json._embedded.events;
+                for (var i = 0; i < events.length; i++) {
+                    var newDiv = $("<div>");
+                    var pName = $("<p>").text(json._embedded.events[i].name);
+                    var pDate = $("<p>").text(json._embedded.events[i].dates.start.localDate);
+                    var pLink = $("<p>").text(json._embedded.events[i].url);
+                    newDiv.append(pName, pDate, pLink);
+
+                    $("#card-content-event" + [i]).append(newDiv);
+                }
+            };
+
+
+        }
+
+    });
+    /////////////// Local Storage ////////
+
+//     var searchHist;
+
+//     var STORAGE_KEY = ("searchBox_history");
+//     var citySearch = $("#citySearch");
+//     var cityInput = $("#travel-input");
+//     var cityHistory = $("#Previously-searched");
+
+//     // When page load we need to get Searched History
+//     getSearchHist();
+
+//     displaySearchHist();
+//     citySearch.click(clickedSearch)
+
+//     function clickedSearch() {
+//         var city = cityInput.val();
+//         cityInput.val('');
+//         manageList(city);
 //     }
-//   }
-// }
+//     //Same with prepend for HTML elements
+//     // push=append    unshift=prepend 
+//     searchHist.unshift(city);
+//     console.log(searchHist);
+//     setSearchHist();
 
-// Francis-Weaather
-var searchHist;
-var STORAGE_KEY = ("searchBox_history");
-var citySearch = $("#citySearch");
-var cityInput = $("#travel-input");
-var cityHistory = $("#searchCity");
+//     function clickedHist() {
+//         var city = $(this).text()
+//         manageList(city);
+//     }
 
-getSearchHist();
-displaySearchHist();
-citySearch.click(clickedSearch)
+//     function manageList(city) {
+//         updateList(city);
+//         setSearchHist();
+//         displaySearchHist();
+//     }
+//     // Displaying search history
+//     function displaySearchHist() {
+//         cityHistory.empty();
+//         if (!searchHist.length) return;
 
-function clickedSearch() {
-    var city = cityInput.val();
-    cityInput.val('');
-    manageList(city);
-}
-        searchHist.unshift(city);
-        console.log(searchHist);
-        setSearchHist();
+//         for (var city of searchHist) {
+//             var cityEl = $("<button>,")
+//                 .addClass("cityHistory")
+//                 .text(city)
+//                 .click(clickedHist)
 
-function clickedHist() {
-    var city = $(this).text()
-    manageList(city);
-}
-
-function manageList(city){
-    updateList(city);
-    setSearchHist();
-    // localStorage.setItem(STORAGE_KEY, JSON.stringify(searchHist))
-    displaySearchHist();
-}
-
-function displaySearchHist() {
-    cityHistory.empty();
-    if (!searchHist.length) return;
-
-    // console.log(searchHist[0]);
-
-    for (var city of searchHist) {
-        var cityEl = $("<button>")
-            .addClass("cityHistory")
-            .text(city)
-            .click(clickedHist)
-
-        cityHistory.append(cityEl)
-    }
-}
-
-function updateList(val) {
-    if (searchHist.includes(val)) {
-        var index = searchHist.indexOf(val);
-        searchHist.splice(index, 1);
-    }
-    searchHist.unshift(val);
-}
+//             cityHistory.append(cityEl)
+//         }
+//     }
+//     // This will not duplicate the city if user will search for a city that is already in the searched history
+//     function updateList(val) {
+//         if (searchHist.includes(val)) {
+//             // This will determine the position of the city in the array
+//             var index = searchHist.indexOf(val);
+//             // Removes the duplicate city in the array
+//             searchHist.splice(index, 1);
+//         }
+//         // Adds the city in the first position of the array
+//         searchHist.unshift(val);
+//     }
 
 
-// Local Storage functions!
-function setSearchHist() {
-    if (!Array.isArray(searchHist)) return alert("DataType Incorrect")
-    setItem(STORAGE_KEY, searchHist)
-}
-function getSearchHist() {
-    searchHist = getItem(STORAGE_KEY)
-    if (searchHist === null) searchHist = []
-}
-function setItem(key, val) {
-    localStorage.setItem(key, JSON.stringify(val))
-}
-function getItem(key) {
-    return JSON.parse(localStorage.getItem(key))
-}
+//     // Local Storage functions!
+
+//     // function to update database
+//     function setSearchHist() {
+//         setItem(STORAGE_KEY, searchHist)
+//     }
+//     function getSearchHist() {
+//         searchHist = getItem(STORAGE_KEY)
+//         // Giving the search history to be an array
+//         if (searchHist === null) searchHist = []
+//     }
+//     function setItem(key, val) {
+//         localStorage.setItem(key, JSON.stringify(val))
+//     }
+//     function getItem(key) {
+//         return JSON.parse(localStorage.getItem(key))
+//     }
+});
